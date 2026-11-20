@@ -137,7 +137,7 @@ public class ContatoView extends Application {
         stage.show();
     }
 
-    public void mostrarTela() { 
-        Application.launch(ContatoView.class);
+    public static void main(    String[] args) { 
+        Application.launch(ContatoView.class,args);
     }
 }

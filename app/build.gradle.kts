@@ -34,5 +34,5 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "edu.curso.App"
+    mainClass = "edu.curso.ContatoView"
 }
