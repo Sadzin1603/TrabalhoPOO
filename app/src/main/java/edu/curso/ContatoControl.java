@@ -1,10 +1,4 @@
 package edu.curso;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -19,23 +13,10 @@ public class ContatoControl {
     private StringProperty email = new SimpleStringProperty("");
     private StringProperty telefone = new SimpleStringProperty("");
     private long contadorId = 1;
-    private Connection con;
+    private ContatoDAO dao = new ContatoDAOImpl();
 
     public ContatoControl() { 
-        try { 
-            Class.forName("org.mariadb.jdbc.Driver");
-            System.out.println("Classe carregada com sucesso");
-            con = DriverManager.getConnection(
-                "jdbc:mariadb://localhost:3306/poo_noite_contato",
-                "root",
-                "123456");
-            System.out.println("Conectado no banco de dados");
-            pesquisarTodos();
-        } catch (ClassNotFoundException e) { 
-            System.out.println("Classe Maria DB não encontrada");
-        } catch (SQLException e) { 
-            System.out.println("Erro ao conectar no banco de dados");
-        }
+        pesquisarTodos();
     }
 
     public void popularContato( Contato c ) { 
@@ -46,61 +27,22 @@ public class ContatoControl {
         }
     }
 
-    public void pesquisarTodos(){
-        try {
-            String sql = "SELECT * FROM contatos";
-            PreparedStatement stmt = con.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery();
-            lista.clear();
-            while(rs.next()==true){
-                Contato c = new Contato();
-                c.setId(rs.getLong("id"));
-                c.setNome(rs.getString("nome"));
-                c.setEmail(rs.getString("email"));
-                c.setTelefone(rs.getString("telefone"));
-                lista.add(c);
-            }
-        } catch (SQLException e) {
-            System.out.println("Erro ao pesquisar contatos");
-        }
+    public void pesquisarTodos() { 
+        lista.clear();
+        lista.addAll( dao.pesquisarTodos() );
     }
 
     public boolean salvar(){
+        Contato c = new Contato();
+        c.setNome( nome.get() );
+        c.setEmail( email.get() );
+        c.setTelefone( telefone.get() );
         if (id.get() == 0) {
-            Contato c = new Contato();
-            c.setId( contadorId );
-            c.setNome( nome.get() );
-            c.setEmail( email.get() );
-            c.setTelefone( telefone.get() );
-            contadorId = contadorId + 1;
-            lista.add( c );
-
-            try { 
-                String sql = "INSERT INTO contatos (nome, email, telefone) VALUES (?, ?, ?)";
-                PreparedStatement stmt = con.prepareStatement( sql );
-                stmt.setString(1, nome.get());
-                stmt.setString(2, email.get());
-                stmt.setString(3, telefone.get());
-                stmt.executeUpdate();
-                pesquisarTodos();
-            } catch (SQLException e) { 
-                System.out.println("Erro ao inserir no banco de dados");
-            }
-
+            dao.salvar( c );
         } else { 
-            try { 
-                String sql = "UPDATE contatos SET nome = ?, email = ?, telefone = ? WHERE id = ?";
-                PreparedStatement stmt = con.prepareStatement( sql );
-                stmt.setString(1, nome.get());
-                stmt.setString(2, email.get());
-                stmt.setString(3, telefone.get());
-                stmt.setLong(4, id.get());
-                stmt.executeUpdate();
-                pesquisarTodos();
-            } catch (SQLException e) { 
-                System.out.println("Erro ao atualizar no banco de dados");
-            }
+            dao.atualizar(id.get(), c );
         }
+        pesquisarTodos();
         limparCampos();
         return true;
     }
@@ -112,16 +54,9 @@ public class ContatoControl {
         email.set( "" );
     }
 
-    public void excluir(Contato c) { 
-        try { 
-                String sql = "DELETE FROM contatos WHERE id = ?";
-                PreparedStatement stmt = con.prepareStatement( sql );
-                stmt.setLong(1, c.getId());
-                stmt.executeUpdate();
-                pesquisarTodos();
-            } catch (SQLException e) { 
-                System.out.println("Erro ao excluir contato");
-            }
+    public void excluir(Contato c) {
+        dao.excluir( c );
+        pesquisarTodos();
     }
 
     public void atualizar(Contato c) {
