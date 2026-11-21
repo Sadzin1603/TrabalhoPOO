@@ -1,6 +1,8 @@
 package edu.curso.fronteira;
 
 import edu.curso.controle.PedidoControl;
+import edu.curso.entidade.Caixa;
+import edu.curso.entidade.Cliente;
 import edu.curso.entidade.Pedido;
 import edu.curso.persistencia.PersistenciaException;
 import javafx.beans.binding.Bindings;
@@ -10,6 +12,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -20,6 +23,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 
 public class PedidoView {
 
@@ -37,66 +41,95 @@ public class PedidoView {
         p.setVgap(6);
         p.setPadding(new Insets(10));
 
-        TextField txtStatus = new TextField();
+        TextField txtNumeroPedido = new TextField();
+        txtNumeroPedido.setPromptText("Somente para pesquisa");
+        Label lblErroNumeroPedido = new Label();
+        lblErroNumeroPedido.setTextFill(Color.RED);
+        lblErroNumeroPedido.textProperty().bind(control.erroNumeroPedidoProperty());
+        p.add(new Label("Nº do Pedido: "), 0, 0);
+        p.add(txtNumeroPedido, 1, 0);
+        p.add(lblErroNumeroPedido, 2, 0);
+        Bindings.bindBidirectional(control.numeroPedidoProperty(), txtNumeroPedido.textProperty());
+
+        ComboBox<String> cmbStatus = new ComboBox<>();
+        cmbStatus.getItems().addAll("Em andamento", "Cancelado", "Concluído");
         Label lblErroStatus = new Label();
         lblErroStatus.setTextFill(Color.RED);
         lblErroStatus.textProperty().bind(control.erroStatusProperty());
-        p.add(new Label("Status: "), 0, 0);
-        p.add(txtStatus, 1, 0);
-        p.add(lblErroStatus, 2, 0);
-        Bindings.bindBidirectional(control.statusProperty(), txtStatus.textProperty());
+        p.add(new Label("Status: "), 0, 1);
+        p.add(cmbStatus, 1, 1);
+        p.add(lblErroStatus, 2, 1);
+        cmbStatus.valueProperty().bindBidirectional(control.statusProperty());
 
-        TextField txtFormaPagamento = new TextField();
+        ComboBox<String> cmbFormaPagamento = new ComboBox<>();
+        cmbFormaPagamento.getItems().addAll("Dinheiro", "Cartão de crédito", "Cartão de débito", "Pix");
         Label lblErroFormaPagamento = new Label();
         lblErroFormaPagamento.setTextFill(Color.RED);
         lblErroFormaPagamento.textProperty().bind(control.erroFormaPagamentoProperty());
-        p.add(new Label("Forma de Pagamento: "), 0, 1);
-        p.add(txtFormaPagamento, 1, 1);
-        p.add(lblErroFormaPagamento, 2, 1);
-        Bindings.bindBidirectional(control.formaPagamentoProperty(), txtFormaPagamento.textProperty());
+        p.add(new Label("Forma de Pagamento: "), 0, 2);
+        p.add(cmbFormaPagamento, 1, 2);
+        p.add(lblErroFormaPagamento, 2, 2);
+        cmbFormaPagamento.valueProperty().bindBidirectional(control.formaPagamentoProperty());
 
         TextField txtDataPedido = new TextField();
         txtDataPedido.setPromptText("dd/MM/aaaa");
         Label lblErroDataPedido = new Label();
         lblErroDataPedido.setTextFill(Color.RED);
         lblErroDataPedido.textProperty().bind(control.erroDataPedidoProperty());
-        p.add(new Label("Data do Pedido: "), 0, 2);
-        p.add(txtDataPedido, 1, 2);
-        p.add(lblErroDataPedido, 2, 2);
+        p.add(new Label("Data do Pedido: "), 0, 3);
+        p.add(txtDataPedido, 1, 3);
+        p.add(lblErroDataPedido, 2, 3);
         Bindings.bindBidirectional(control.dataPedidoProperty(), txtDataPedido.textProperty());
 
         TextField txtValorTotal = new TextField();
         Label lblErroValorTotal = new Label();
         lblErroValorTotal.setTextFill(Color.RED);
         lblErroValorTotal.textProperty().bind(control.erroValorTotalProperty());
-        p.add(new Label("Valor Total: "), 0, 3);
-        p.add(txtValorTotal, 1, 3);
-        p.add(lblErroValorTotal, 2, 3);
+        p.add(new Label("Valor Total: "), 0, 4);
+        p.add(txtValorTotal, 1, 4);
+        p.add(lblErroValorTotal, 2, 4);
         Bindings.bindBidirectional(control.valorTotalProperty(), txtValorTotal.textProperty());
 
-        TextField txtIdCliente = new TextField();
-        Label lblErroIdCliente = new Label();
-        lblErroIdCliente.setTextFill(Color.RED);
-        lblErroIdCliente.textProperty().bind(control.erroIdClienteProperty());
-        p.add(new Label("Id do Cliente: "), 0, 4);
-        p.add(txtIdCliente, 1, 4);
-        p.add(lblErroIdCliente, 2, 4);
-        Bindings.bindBidirectional(control.idClienteProperty(), txtIdCliente.textProperty());
+        ComboBox<Cliente> cmbCliente = new ComboBox<>(control.getListaClientes());
+        cmbCliente.setPromptText("Selecione...");
+        cmbCliente.setOnShowing(e -> control.recarregarListaCliente());
+        cmbCliente.setConverter(new StringConverter<>() {
+            @Override public String toString(Cliente c) { return c == null ? "" : c.getNome(); }
+            @Override public Cliente fromString(String s) { return null; }
+        });
+        Label lblErroCliente = new Label();
+        lblErroCliente.setTextFill(Color.RED);
+        lblErroCliente.textProperty().bind(control.erroClienteProperty());
+        p.add(new Label("Cliente: "), 0, 5);
+        p.add(cmbCliente, 1, 5);
+        p.add(lblErroCliente, 2, 5);
+        cmbCliente.valueProperty().bindBidirectional(control.clienteProperty());
 
-        TextField txtIdCaixa = new TextField();
-        Label lblErroIdCaixa = new Label();
-        lblErroIdCaixa.setTextFill(Color.RED);
-        lblErroIdCaixa.textProperty().bind(control.erroIdCaixaProperty());
-        p.add(new Label("Id do Caixa: "), 0, 5);
-        p.add(txtIdCaixa, 1, 5);
-        p.add(lblErroIdCaixa, 2, 5);
-        Bindings.bindBidirectional(control.idCaixaProperty(), txtIdCaixa.textProperty());
+        ComboBox<Caixa> cmbCaixa = new ComboBox<>(control.getListaCaixas());
+        cmbCaixa.setPromptText("Selecione...");
+        cmbCaixa.setOnShowing(e -> control.recarregarListaCaixa());
+        cmbCaixa.setConverter(new StringConverter<>() {
+            @Override public String toString(Caixa c) { return c == null ? "" : c.getNome(); }
+            @Override public Caixa fromString(String s) { return null; }
+        });
+        Label lblErroCaixa = new Label();
+        lblErroCaixa.setTextFill(Color.RED);
+        lblErroCaixa.textProperty().bind(control.erroCaixaProperty());
+        p.add(new Label("Caixa: "), 0, 6);
+        p.add(cmbCaixa, 1, 6);
+        p.add(lblErroCaixa, 2, 6);
+        cmbCaixa.valueProperty().bindBidirectional(control.caixaProperty());
 
         Button btnSalvar = new Button("Salvar");
         Button btnLimpar = new Button("Limpar");
         Button btnPesquisar = new Button("Pesquisar");
         HBox painelAcoes = new HBox(10, btnSalvar, btnLimpar, btnPesquisar);
-        p.add(painelAcoes, 1, 6);
+        p.add(painelAcoes, 1, 7);
+
+        TableColumn<Pedido, String> colId = new TableColumn<>("Nº");
+        colId.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getId()))
+        );
 
         TableColumn<Pedido, String> colStatus = new TableColumn<>("Status");
         colStatus.setCellValueFactory(
@@ -118,14 +151,14 @@ public class PedidoView {
             item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getValorTotal()))
         );
 
-        TableColumn<Pedido, String> colIdCliente = new TableColumn<>("Id do Cliente");
-        colIdCliente.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getIdCliente()))
+        TableColumn<Pedido, String> colCliente = new TableColumn<>("Cliente");
+        colCliente.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(item.getValue().getCliente() == null ? "" : item.getValue().getCliente().getNome())
         );
 
-        TableColumn<Pedido, String> colIdCaixa = new TableColumn<>("Id do Caixa");
-        colIdCaixa.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getIdCaixa()))
+        TableColumn<Pedido, String> colCaixa = new TableColumn<>("Caixa");
+        colCaixa.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(item.getValue().getCaixa() == null ? "" : item.getValue().getCaixa().getNome())
         );
 
         TableColumn<Pedido, Void> colAcoes = new TableColumn<>("Ações");
@@ -173,7 +206,7 @@ public class PedidoView {
             };
         colAcoes.setCellFactory(callBack);
 
-        table.getColumns().addAll(colStatus, colFormaPagamento, colDataPedido, colValorTotal, colIdCliente, colIdCaixa, colAcoes);
+        table.getColumns().addAll(colId, colStatus, colFormaPagamento, colDataPedido, colValorTotal, colCliente, colCaixa, colAcoes);
         table.setItems(control.getLista());
 
         table.getSelectionModel()

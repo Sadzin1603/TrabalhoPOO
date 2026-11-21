@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import edu.curso.entidade.Caixa;
+import edu.curso.entidade.Cliente;
 import edu.curso.entidade.Pedido;
 
 public class PedidoDAOImpl implements PedidoDAO {
@@ -17,8 +19,8 @@ public class PedidoDAOImpl implements PedidoDAO {
         stmt.setString(2, e.getFormaPagamento());
         stmt.setDate(3, e.getDataPedido() == null ? null : Date.valueOf(e.getDataPedido()));
         stmt.setDouble(4, e.getValorTotal());
-        stmt.setLong(5, e.getIdCliente());
-        stmt.setLong(6, e.getIdCaixa());
+        stmt.setLong(5, e.getCliente().getId());
+        stmt.setLong(6, e.getCaixa().getId());
     }
 
     private Pedido mapear(ResultSet rs) throws SQLException {
@@ -28,8 +30,17 @@ public class PedidoDAOImpl implements PedidoDAO {
         e.setFormaPagamento(rs.getString("forma_pagamento"));
         e.setDataPedido(rs.getDate("data_pedido") == null ? null : rs.getDate("data_pedido").toLocalDate());
         e.setValorTotal(rs.getDouble("valor_total"));
-        e.setIdCliente(rs.getLong("id_cliente"));
-        e.setIdCaixa(rs.getLong("id_caixa"));
+
+        Cliente cliente = new Cliente();
+        cliente.setId(rs.getLong("id_cliente"));
+        cliente.setNome(rs.getString("nome_cliente"));
+        e.setCliente(cliente);
+
+        Caixa caixa = new Caixa();
+        caixa.setId(rs.getLong("id_caixa"));
+        caixa.setNome(rs.getString("nome_caixa"));
+        e.setCaixa(caixa);
+
         return e;
     }
 
@@ -54,7 +65,12 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public List<Pedido> pesquisarTodos() {
         List<Pedido> lista = new ArrayList<>();
-        String sql = "SELECT id, status, forma_pagamento, data_pedido, valor_total, id_cliente, id_caixa FROM pedidos ORDER BY id";
+        String sql = "SELECT p.id, p.status, p.forma_pagamento, p.data_pedido, p.valor_total, "
+                   + "p.id_cliente, c.nome AS nome_cliente, p.id_caixa, cx.nome AS nome_caixa "
+                   + "FROM pedidos p "
+                   + "JOIN clientes c ON c.id = p.id_cliente "
+                   + "JOIN caixas cx ON cx.id = p.id_caixa "
+                   + "ORDER BY p.id";
         try (Connection con = ConexaoFactory.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {

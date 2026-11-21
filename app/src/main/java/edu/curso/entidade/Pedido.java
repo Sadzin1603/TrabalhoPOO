@@ -8,8 +8,8 @@ public class Pedido {
     private String formaPagamento;
     private LocalDate dataPedido;
     private double valorTotal;
-    private long idCliente;
-    private long idCaixa;
+    private Cliente cliente;
+    private Caixa caixa;
 
     public long getId() {
         return this.id;
@@ -46,22 +46,22 @@ public class Pedido {
         this.valorTotal = valor;
     }
 
-    public long getIdCliente() {
-        return this.idCliente;
+    public Cliente getCliente() {
+        return this.cliente;
     }
-    public void setIdCliente(long valor) {
-        this.idCliente = valor;
+    public void setCliente(Cliente valor) {
+        this.cliente = valor;
     }
 
-    public long getIdCaixa() {
-        return this.idCaixa;
+    public Caixa getCaixa() {
+        return this.caixa;
     }
-    public void setIdCaixa(long valor) {
-        this.idCaixa = valor;
+    public void setCaixa(Caixa valor) {
+        this.caixa = valor;
     }
 
     @Override
     public String toString() {
-        return "Pedido[" + id + ", " + status + ", " + formaPagamento + ", " + dataPedido + ", " + valorTotal + ", " + idCliente + ", " + idCaixa + "]";
+        return "Pedido[" + id + ", " + status + ", " + formaPagamento + ", " + dataPedido + ", " + valorTotal + ", " + cliente + ", " + caixa + "]";
     }
 }

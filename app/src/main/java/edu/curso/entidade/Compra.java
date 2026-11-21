@@ -10,7 +10,8 @@ public class Compra {
     private int volumeTotal;
     private double valorFrete;
     private double valorTotal;
-    private long idFornecedor;
+    private Fornecedor fornecedor;
+    private Produto produto;
 
     public long getId() {
         return this.id;
@@ -61,15 +62,22 @@ public class Compra {
         this.valorTotal = valor;
     }
 
-    public long getIdFornecedor() {
-        return this.idFornecedor;
+    public Fornecedor getFornecedor() {
+        return this.fornecedor;
     }
-    public void setIdFornecedor(long valor) {
-        this.idFornecedor = valor;
+    public void setFornecedor(Fornecedor valor) {
+        this.fornecedor = valor;
+    }
+
+    public Produto getProduto() {
+        return this.produto;
+    }
+    public void setProduto(Produto valor) {
+        this.produto = valor;
     }
 
     @Override
     public String toString() {
-        return "Compra[" + id + ", " + status + ", " + dataCompra + ", " + previsaoEntrega + ", " + volumeTotal + ", " + valorFrete + ", " + valorTotal + ", " + idFornecedor + "]";
+        return "Compra[" + id + ", " + status + ", " + dataCompra + ", " + previsaoEntrega + ", " + volumeTotal + ", " + valorFrete + ", " + valorTotal + ", " + fornecedor + ", " + produto + "]";
     }
 }
