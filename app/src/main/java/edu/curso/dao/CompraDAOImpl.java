@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import edu.curso.entidade.Compra;
 import edu.curso.entidade.Fornecedor;
+import edu.curso.entidade.ItemCompra;
 import edu.curso.entidade.Produto;
 
 public class CompraDAOImpl implements CompraDAO {
@@ -22,7 +23,6 @@ public class CompraDAOImpl implements CompraDAO {
         stmt.setDouble(5, e.getValorFrete());
         stmt.setDouble(6, e.getValorTotal());
         stmt.setLong(7, e.getFornecedor().getId());
-        stmt.setLong(8, e.getProduto().getId());
     }
 
     private Compra mapear(ResultSet rs) throws SQLException {
@@ -40,25 +40,66 @@ public class CompraDAOImpl implements CompraDAO {
         fornecedor.setNome(rs.getString("nome_fornecedor"));
         e.setFornecedor(fornecedor);
 
-        Produto produto = new Produto();
-        produto.setId(rs.getLong("id_produto"));
-        produto.setNome(rs.getString("nome_produto"));
-        e.setProduto(produto);
-
         return e;
+    }
+
+    private void salvarItens(Connection con, Compra e) throws SQLException {
+        String sql = "INSERT INTO itens_compra (id_compra, id_produto, quantidade, valor_unitario) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            for (ItemCompra i : e.getItens()) {
+                stmt.setLong(1, e.getId());
+                stmt.setLong(2, i.getProduto().getId());
+                stmt.setInt(3, i.getQuantidade());
+                stmt.setDouble(4, i.getValorUnitario());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
+    }
+
+    private void carregarItens(Connection con, Compra c) throws SQLException {
+        String sql = "SELECT i.id, i.quantidade, i.valor_unitario, i.id_produto, pr.nome AS nome_produto "
+                   + "FROM itens_compra i "
+                   + "JOIN produtos pr ON pr.id = i.id_produto "
+                   + "WHERE i.id_compra = ? ORDER BY i.id";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setLong(1, c.getId());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ItemCompra i = new ItemCompra();
+                    i.setId(rs.getLong("id"));
+                    i.setQuantidade(rs.getInt("quantidade"));
+                    i.setValorUnitario(rs.getDouble("valor_unitario"));
+                    Produto produto = new Produto();
+                    produto.setId(rs.getLong("id_produto"));
+                    produto.setNome(rs.getString("nome_produto"));
+                    i.setProduto(produto);
+                    c.getItens().add(i);
+                }
+            }
+        }
     }
 
     @Override
     public Compra salvar(Compra e) {
-        String sql = "INSERT INTO compras (status, data_compra, previsao_entrega, volume_total, valor_frete, valor_total, id_fornecedor, id_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection con = ConexaoFactory.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            preencher(stmt, e);
-            stmt.executeUpdate();
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    e.setId(rs.getLong(1));
+        String sql = "INSERT INTO compras (status, data_compra, previsao_entrega, volume_total, valor_frete, valor_total, id_fornecedor) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection con = ConexaoFactory.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                try (PreparedStatement stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    preencher(stmt, e);
+                    stmt.executeUpdate();
+                    try (ResultSet rs = stmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            e.setId(rs.getLong(1));
+                        }
+                    }
                 }
+                salvarItens(con, e);
+                con.commit();
+            } catch (SQLException ex) {
+                con.rollback();
+                throw ex;
             }
         } catch (SQLException ex) {
             throw new PersistenciaException("Erro ao inserir compra no banco de dados: " + ex.getMessage(), ex);
@@ -70,16 +111,19 @@ public class CompraDAOImpl implements CompraDAO {
     public List<Compra> pesquisarTodos() {
         List<Compra> lista = new ArrayList<>();
         String sql = "SELECT c.id, c.status, c.data_compra, c.previsao_entrega, c.volume_total, c.valor_frete, c.valor_total, "
-                   + "c.id_fornecedor, f.nome AS nome_fornecedor, c.id_produto, pr.nome AS nome_produto "
+                   + "c.id_fornecedor, f.nome AS nome_fornecedor "
                    + "FROM compras c "
                    + "JOIN fornecedores f ON f.id = c.id_fornecedor "
-                   + "JOIN produtos pr ON pr.id = c.id_produto "
                    + "ORDER BY c.id";
-        try (Connection con = ConexaoFactory.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                lista.add(mapear(rs));
+        try (Connection con = ConexaoFactory.getConnection()) {
+            try (PreparedStatement stmt = con.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapear(rs));
+                }
+            }
+            for (Compra c : lista) {
+                carregarItens(con, c);
             }
         } catch (SQLException ex) {
             throw new PersistenciaException("Erro ao pesquisar compra no banco de dados: " + ex.getMessage(), ex);
@@ -101,12 +145,26 @@ public class CompraDAOImpl implements CompraDAO {
 
     @Override
     public void atualizar(long id, Compra e) {
-        String sql = "UPDATE compras SET status=?, data_compra=?, previsao_entrega=?, volume_total=?, valor_frete=?, valor_total=?, id_fornecedor=?, id_produto=? WHERE id=?";
-        try (Connection con = ConexaoFactory.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-            preencher(stmt, e);
-            stmt.setLong(9, id);
-            stmt.executeUpdate();
+        String sql = "UPDATE compras SET status=?, data_compra=?, previsao_entrega=?, volume_total=?, valor_frete=?, valor_total=?, id_fornecedor=? WHERE id=?";
+        e.setId(id);
+        try (Connection con = ConexaoFactory.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                try (PreparedStatement stmt = con.prepareStatement(sql)) {
+                    preencher(stmt, e);
+                    stmt.setLong(8, id);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement del = con.prepareStatement("DELETE FROM itens_compra WHERE id_compra=?")) {
+                    del.setLong(1, id);
+                    del.executeUpdate();
+                }
+                salvarItens(con, e);
+                con.commit();
+            } catch (SQLException ex) {
+                con.rollback();
+                throw ex;
+            }
         } catch (SQLException ex) {
             throw new PersistenciaException("Erro ao atualizar compra no banco de dados: " + ex.getMessage(), ex);
         }

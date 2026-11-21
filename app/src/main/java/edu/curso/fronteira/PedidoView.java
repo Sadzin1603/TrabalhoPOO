@@ -1,10 +1,12 @@
 package edu.curso.fronteira;
 
 import edu.curso.controle.PedidoControl;
+import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Caixa;
 import edu.curso.entidade.Cliente;
-import edu.curso.dao.PersistenciaException;
+import edu.curso.entidade.ItemPedido;
 import edu.curso.entidade.Pedido;
+import edu.curso.entidade.Produto;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.geometry.Insets;
@@ -82,6 +84,8 @@ public class PedidoView {
         Bindings.bindBidirectional(control.dataPedidoProperty(), txtDataPedido.textProperty());
 
         TextField txtValorTotal = new TextField();
+        txtValorTotal.setEditable(false);
+        txtValorTotal.setPromptText("Calculado pelos itens");
         Label lblErroValorTotal = new Label();
         lblErroValorTotal.setTextFill(Color.RED);
         lblErroValorTotal.textProperty().bind(control.erroValorTotalProperty());
@@ -120,11 +124,87 @@ public class PedidoView {
         p.add(lblErroCaixa, 2, 6);
         cmbCaixa.valueProperty().bindBidirectional(control.caixaProperty());
 
+        ComboBox<Produto> cmbProduto = new ComboBox<>(control.getListaProdutos());
+        cmbProduto.setPromptText("Selecione...");
+        cmbProduto.setOnShowing(e -> control.recarregarListaProduto());
+        cmbProduto.setConverter(new StringConverter<>() {
+            @Override public String toString(Produto pr) { return pr == null ? "" : pr.getNome(); }
+            @Override public Produto fromString(String s) { return null; }
+        });
+        Label lblErroProduto = new Label();
+        lblErroProduto.setTextFill(Color.RED);
+        lblErroProduto.textProperty().bind(control.erroProdutoProperty());
+        p.add(new Label("Produto: "), 0, 7);
+        p.add(cmbProduto, 1, 7);
+        p.add(lblErroProduto, 2, 7);
+        cmbProduto.valueProperty().bindBidirectional(control.produtoProperty());
+
+        TextField txtQuantidade = new TextField();
+        Label lblErroQuantidade = new Label();
+        lblErroQuantidade.setTextFill(Color.RED);
+        lblErroQuantidade.textProperty().bind(control.erroQuantidadeProperty());
+        p.add(new Label("Quantidade: "), 0, 8);
+        p.add(txtQuantidade, 1, 8);
+        p.add(lblErroQuantidade, 2, 8);
+        Bindings.bindBidirectional(control.quantidadeProperty(), txtQuantidade.textProperty());
+
+        Button btnAdicionarItem = new Button("Adicionar item");
+        Label lblErroItens = new Label();
+        lblErroItens.setTextFill(Color.RED);
+        lblErroItens.textProperty().bind(control.erroItensProperty());
+        p.add(new HBox(10, btnAdicionarItem, lblErroItens), 1, 9);
+        btnAdicionarItem.setOnAction(e -> control.adicionarItem());
+
+        TableView<ItemPedido> tableItens = new TableView<>();
+
+        TableColumn<ItemPedido, String> colItemProduto = new TableColumn<>("Produto");
+        colItemProduto.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(item.getValue().getProduto().getNome())
+        );
+
+        TableColumn<ItemPedido, String> colItemQtd = new TableColumn<>("Qtd");
+        colItemQtd.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getQuantidade()))
+        );
+
+        TableColumn<ItemPedido, String> colItemValor = new TableColumn<>("Valor Unit.");
+        colItemValor.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getValorUnitario()))
+        );
+
+        TableColumn<ItemPedido, String> colItemSubtotal = new TableColumn<>("Subtotal");
+        colItemSubtotal.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getSubtotal()))
+        );
+
+        TableColumn<ItemPedido, Void> colItemAcao = new TableColumn<>("Ação");
+        colItemAcao.setCellFactory(tc -> new TableCell<>() {
+            private final Button btnRemover = new Button("Remover");
+            {
+                btnRemover.setOnAction(ev -> {
+                    ItemPedido item = getTableRow().getItem();
+                    if (item != null) {
+                        control.removerItem(item);
+                    }
+                });
+            }
+            @Override
+            protected void updateItem(Void valor, boolean empty) {
+                super.updateItem(valor, empty);
+                setGraphic(empty ? null : btnRemover);
+            }
+        });
+
+        tableItens.getColumns().addAll(colItemProduto, colItemQtd, colItemValor, colItemSubtotal, colItemAcao);
+        tableItens.setItems(control.getItens());
+        tableItens.setPrefHeight(130);
+        p.add(tableItens, 0, 10, 3, 1);
+
         Button btnSalvar = new Button("Salvar");
         Button btnLimpar = new Button("Limpar");
         Button btnPesquisar = new Button("Pesquisar");
         HBox painelAcoes = new HBox(10, btnSalvar, btnLimpar, btnPesquisar);
-        p.add(painelAcoes, 1, 7);
+        p.add(painelAcoes, 1, 11);
 
         TableColumn<Pedido, String> colId = new TableColumn<>("Nº");
         colId.setCellValueFactory(
@@ -159,6 +239,11 @@ public class PedidoView {
         TableColumn<Pedido, String> colCaixa = new TableColumn<>("Caixa");
         colCaixa.setCellValueFactory(
             item -> new ReadOnlyStringWrapper(item.getValue().getCaixa() == null ? "" : item.getValue().getCaixa().getNome())
+        );
+
+        TableColumn<Pedido, String> colItens = new TableColumn<>("Itens");
+        colItens.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getItens().size()))
         );
 
         TableColumn<Pedido, Void> colAcoes = new TableColumn<>("Ações");
@@ -206,7 +291,7 @@ public class PedidoView {
             };
         colAcoes.setCellFactory(callBack);
 
-        table.getColumns().addAll(colId, colStatus, colFormaPagamento, colDataPedido, colValorTotal, colCliente, colCaixa, colAcoes);
+        table.getColumns().addAll(colId, colStatus, colFormaPagamento, colDataPedido, colValorTotal, colCliente, colCaixa, colItens, colAcoes);
         table.setItems(control.getLista());
 
         table.getSelectionModel()

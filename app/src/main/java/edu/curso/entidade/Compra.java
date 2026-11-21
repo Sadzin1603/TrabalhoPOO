@@ -1,6 +1,8 @@
 package edu.curso.entidade;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Compra {
     private long id;
@@ -11,7 +13,7 @@ public class Compra {
     private double valorFrete;
     private double valorTotal;
     private Fornecedor fornecedor;
-    private Produto produto;
+    private List<ItemCompra> itens = new ArrayList<>();
 
     public long getId() {
         return this.id;
@@ -69,15 +71,15 @@ public class Compra {
         this.fornecedor = valor;
     }
 
-    public Produto getProduto() {
-        return this.produto;
+    public List<ItemCompra> getItens() {
+        return this.itens;
     }
-    public void setProduto(Produto valor) {
-        this.produto = valor;
+    public void setItens(List<ItemCompra> valor) {
+        this.itens = valor;
     }
 
     @Override
     public String toString() {
-        return "Compra[" + id + ", " + status + ", " + dataCompra + ", " + previsaoEntrega + ", " + volumeTotal + ", " + valorFrete + ", " + valorTotal + ", " + fornecedor + ", " + produto + "]";
+        return "Compra[" + id + ", " + status + ", " + dataCompra + ", " + previsaoEntrega + ", " + volumeTotal + ", " + valorFrete + ", " + valorTotal + ", " + fornecedor + ", " + itens + "]";
     }
 }

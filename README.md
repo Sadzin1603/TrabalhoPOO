@@ -90,6 +90,15 @@ CRUD (criar, ler, atualizar e remover), permitindo:
 - formaPagamento
 - dataPedido
 - valorTotal
+- produto
+
+### Itens Pedido
+
+- id
+- pedido
+- produto
+- quantidade
+- valorUnitario
 
 ### Compra
 
@@ -103,12 +112,45 @@ CRUD (criar, ler, atualizar e remover), permitindo:
 - valorFrete
 - valorTotal
 
+### Items Compra
+
+- id
+- compra
+- produto
+- 1uantidade
+- valorUnitario
 
 
-Instruções para execução = 
-Divisão de responsabilidades por integrante =
-Link para o vídeo =
+## Instruções para execução
 
+- No terminal digite .\executar.bat e de enter
+
+## Divisão de Responsabilidade por Integrante
+
+### Kauan
+
+- Entidade de Caixa, Cliente, Pessoa, PessoaFisica e PessoaJuridica.
+- Controller de Caixa, Cliente, Pessoa, PessoaFisica e PessoaJuridica.
+- Fronteira de Caixa, Cliente, Pessoa, PessoaFisica e PessoaJuridica.
+- Gravação do Video.
+
+### Pedro
+
+- Entidade de Fornecedor, Compra e ItemCompra.
+- Controller de Fornecedor e Compra.
+- Fronteira de Fornecedor e Compra.
+- Elaboração do README.
+- Junção de todos os módulos em uma área única.
+
+### Hugo
+
+- Entidade de Pedido, Produto e ItemProduto.
+- Controller de Pedido e Produto.
+- Fronteira de Pedido e Produto.
+- Comunicação entre os CRUDs.
+- Banco de dados.
+
+## Link para o vídeo
 
 ## Requisitos
 

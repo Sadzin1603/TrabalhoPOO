@@ -1,6 +1,8 @@
 package edu.curso.entidade;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Pedido {
     private long id;
@@ -10,6 +12,7 @@ public class Pedido {
     private double valorTotal;
     private Cliente cliente;
     private Caixa caixa;
+    private List<ItemPedido> itens = new ArrayList<>();
 
     public long getId() {
         return this.id;
@@ -60,8 +63,15 @@ public class Pedido {
         this.caixa = valor;
     }
 
+    public List<ItemPedido> getItens() {
+        return this.itens;
+    }
+    public void setItens(List<ItemPedido> valor) {
+        this.itens = valor;
+    }
+
     @Override
     public String toString() {
-        return "Pedido[" + id + ", " + status + ", " + formaPagamento + ", " + dataPedido + ", " + valorTotal + ", " + cliente + ", " + caixa + "]";
+        return "Pedido[" + id + ", " + status + ", " + formaPagamento + ", " + dataPedido + ", " + valorTotal + ", " + cliente + ", " + caixa + ", " + itens + "]";
     }
 }

@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import edu.curso.entidade.Caixa;
 import edu.curso.entidade.Cliente;
+import edu.curso.entidade.ItemPedido;
 import edu.curso.entidade.Pedido;
+import edu.curso.entidade.Produto;
 
 public class PedidoDAOImpl implements PedidoDAO {
 
@@ -44,17 +46,63 @@ public class PedidoDAOImpl implements PedidoDAO {
         return e;
     }
 
+    private void salvarItens(Connection con, Pedido e) throws SQLException {
+        String sql = "INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, valor_unitario) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            for (ItemPedido i : e.getItens()) {
+                stmt.setLong(1, e.getId());
+                stmt.setLong(2, i.getProduto().getId());
+                stmt.setInt(3, i.getQuantidade());
+                stmt.setDouble(4, i.getValorUnitario());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
+    }
+
+    private void carregarItens(Connection con, Pedido p) throws SQLException {
+        String sql = "SELECT i.id, i.quantidade, i.valor_unitario, i.id_produto, pr.nome AS nome_produto "
+                   + "FROM itens_pedido i "
+                   + "JOIN produtos pr ON pr.id = i.id_produto "
+                   + "WHERE i.id_pedido = ? ORDER BY i.id";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setLong(1, p.getId());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ItemPedido i = new ItemPedido();
+                    i.setId(rs.getLong("id"));
+                    i.setQuantidade(rs.getInt("quantidade"));
+                    i.setValorUnitario(rs.getDouble("valor_unitario"));
+                    Produto produto = new Produto();
+                    produto.setId(rs.getLong("id_produto"));
+                    produto.setNome(rs.getString("nome_produto"));
+                    i.setProduto(produto);
+                    p.getItens().add(i);
+                }
+            }
+        }
+    }
+
     @Override
     public Pedido salvar(Pedido e) {
         String sql = "INSERT INTO pedidos (status, forma_pagamento, data_pedido, valor_total, id_cliente, id_caixa) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection con = ConexaoFactory.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            preencher(stmt, e);
-            stmt.executeUpdate();
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    e.setId(rs.getLong(1));
+        try (Connection con = ConexaoFactory.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                try (PreparedStatement stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    preencher(stmt, e);
+                    stmt.executeUpdate();
+                    try (ResultSet rs = stmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            e.setId(rs.getLong(1));
+                        }
+                    }
                 }
+                salvarItens(con, e);
+                con.commit();
+            } catch (SQLException ex) {
+                con.rollback();
+                throw ex;
             }
         } catch (SQLException ex) {
             throw new PersistenciaException("Erro ao inserir pedido no banco de dados: " + ex.getMessage(), ex);
@@ -71,11 +119,15 @@ public class PedidoDAOImpl implements PedidoDAO {
                    + "JOIN clientes c ON c.id = p.id_cliente "
                    + "JOIN caixas cx ON cx.id = p.id_caixa "
                    + "ORDER BY p.id";
-        try (Connection con = ConexaoFactory.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                lista.add(mapear(rs));
+        try (Connection con = ConexaoFactory.getConnection()) {
+            try (PreparedStatement stmt = con.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapear(rs));
+                }
+            }
+            for (Pedido p : lista) {
+                carregarItens(con, p);
             }
         } catch (SQLException ex) {
             throw new PersistenciaException("Erro ao pesquisar pedido no banco de dados: " + ex.getMessage(), ex);
@@ -98,11 +150,25 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public void atualizar(long id, Pedido e) {
         String sql = "UPDATE pedidos SET status=?, forma_pagamento=?, data_pedido=?, valor_total=?, id_cliente=?, id_caixa=? WHERE id=?";
-        try (Connection con = ConexaoFactory.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-            preencher(stmt, e);
-            stmt.setLong(7, id);
-            stmt.executeUpdate();
+        e.setId(id);
+        try (Connection con = ConexaoFactory.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                try (PreparedStatement stmt = con.prepareStatement(sql)) {
+                    preencher(stmt, e);
+                    stmt.setLong(7, id);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement del = con.prepareStatement("DELETE FROM itens_pedido WHERE id_pedido=?")) {
+                    del.setLong(1, id);
+                    del.executeUpdate();
+                }
+                salvarItens(con, e);
+                con.commit();
+            } catch (SQLException ex) {
+                con.rollback();
+                throw ex;
+            }
         } catch (SQLException ex) {
             throw new PersistenciaException("Erro ao atualizar pedido no banco de dados: " + ex.getMessage(), ex);
         }

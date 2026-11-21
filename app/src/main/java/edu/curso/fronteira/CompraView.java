@@ -1,15 +1,10 @@
 package edu.curso.fronteira;
 
-import edu.curso.dao.PedidoDAO;
-import edu.curso.dao.PedidoDAOImpl;
-import edu.curso.dao.ClienteDAO;
-import edu.curso.dao.ClienteDAOImpl;
-import edu.curso.dao.CaixaDAO;
-import edu.curso.dao.CaixaDAOImpl;
-import edu.curso.dao.PersistenciaException;
 import edu.curso.controle.CompraControl;
+import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Compra;
 import edu.curso.entidade.Fornecedor;
+import edu.curso.entidade.ItemCompra;
 import edu.curso.entidade.Produto;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -89,12 +84,10 @@ public class CompraView {
         Bindings.bindBidirectional(control.previsaoEntregaProperty(), txtPrevisaoEntrega.textProperty());
 
         TextField txtVolumeTotal = new TextField();
-        Label lblErroVolumeTotal = new Label();
-        lblErroVolumeTotal.setTextFill(Color.RED);
-        lblErroVolumeTotal.textProperty().bind(control.erroVolumeTotalProperty());
+        txtVolumeTotal.setEditable(false);
+        txtVolumeTotal.setPromptText("Soma das quantidades");
         p.add(new Label("Volume Total: "), 0, 4);
         p.add(txtVolumeTotal, 1, 4);
-        p.add(lblErroVolumeTotal, 2, 4);
         Bindings.bindBidirectional(control.volumeTotalProperty(), txtVolumeTotal.textProperty());
 
         TextField txtValorFrete = new TextField();
@@ -107,12 +100,10 @@ public class CompraView {
         Bindings.bindBidirectional(control.valorFreteProperty(), txtValorFrete.textProperty());
 
         TextField txtValorTotal = new TextField();
-        Label lblErroValorTotal = new Label();
-        lblErroValorTotal.setTextFill(Color.RED);
-        lblErroValorTotal.textProperty().bind(control.erroValorTotalProperty());
+        txtValorTotal.setEditable(false);
+        txtValorTotal.setPromptText("Itens + frete");
         p.add(new Label("Valor Total: "), 0, 6);
         p.add(txtValorTotal, 1, 6);
-        p.add(lblErroValorTotal, 2, 6);
         Bindings.bindBidirectional(control.valorTotalProperty(), txtValorTotal.textProperty());
 
         ComboBox<Fornecedor> cmbFornecedor = new ComboBox<>(control.getListaFornecedores());
@@ -159,11 +150,78 @@ public class CompraView {
         p.add(lblErroProduto, 2, 8);
         cmbProduto.valueProperty().bindBidirectional(control.produtoProperty());
 
+        TextField txtQuantidade = new TextField();
+        Label lblErroQuantidade = new Label();
+        lblErroQuantidade.setTextFill(Color.RED);
+        lblErroQuantidade.textProperty().bind(control.erroQuantidadeProperty());
+        p.add(new Label("Quantidade: "), 0, 9);
+        p.add(txtQuantidade, 1, 9);
+        p.add(lblErroQuantidade, 2, 9);
+        Bindings.bindBidirectional(control.quantidadeProperty(), txtQuantidade.textProperty());
+
+        TextField txtValorUnitario = new TextField();
+        Label lblErroValorUnitario = new Label();
+        lblErroValorUnitario.setTextFill(Color.RED);
+        lblErroValorUnitario.textProperty().bind(control.erroValorUnitarioProperty());
+        p.add(new Label("Valor Unit.: "), 0, 10);
+        p.add(txtValorUnitario, 1, 10);
+        p.add(lblErroValorUnitario, 2, 10);
+        Bindings.bindBidirectional(control.valorUnitarioProperty(), txtValorUnitario.textProperty());
+
+        Button btnAdicionarItem = new Button("Adicionar item");
+        Label lblErroItens = new Label();
+        lblErroItens.setTextFill(Color.RED);
+        lblErroItens.textProperty().bind(control.erroItensProperty());
+        p.add(new HBox(10, btnAdicionarItem, lblErroItens), 1, 11);
+        btnAdicionarItem.setOnAction(e -> control.adicionarItem());
+
+        TableView<ItemCompra> tableItens = new TableView<>();
+
+        TableColumn<ItemCompra, String> colItemProduto = new TableColumn<>("Produto");
+        colItemProduto.setCellValueFactory(
+                item -> new ReadOnlyStringWrapper(item.getValue().getProduto().getNome()));
+
+        TableColumn<ItemCompra, String> colItemQtd = new TableColumn<>("Qtd");
+        colItemQtd.setCellValueFactory(
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getQuantidade())));
+
+        TableColumn<ItemCompra, String> colItemValor = new TableColumn<>("Valor Unit.");
+        colItemValor.setCellValueFactory(
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getValorUnitario())));
+
+        TableColumn<ItemCompra, String> colItemSubtotal = new TableColumn<>("Subtotal");
+        colItemSubtotal.setCellValueFactory(
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getSubtotal())));
+
+        TableColumn<ItemCompra, Void> colItemAcao = new TableColumn<>("Ação");
+        colItemAcao.setCellFactory(tc -> new TableCell<>() {
+            private final Button btnRemover = new Button("Remover");
+            {
+                btnRemover.setOnAction(ev -> {
+                    ItemCompra item = getTableRow().getItem();
+                    if (item != null) {
+                        control.removerItem(item);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Void valor, boolean empty) {
+                super.updateItem(valor, empty);
+                setGraphic(empty ? null : btnRemover);
+            }
+        });
+
+        tableItens.getColumns().addAll(colItemProduto, colItemQtd, colItemValor, colItemSubtotal, colItemAcao);
+        tableItens.setItems(control.getItens());
+        tableItens.setPrefHeight(130);
+        p.add(tableItens, 0, 12, 3, 1);
+
         Button btnSalvar = new Button("Salvar");
         Button btnLimpar = new Button("Limpar");
         Button btnPesquisar = new Button("Pesquisar");
         HBox painelAcoes = new HBox(10, btnSalvar, btnLimpar, btnPesquisar);
-        p.add(painelAcoes, 1, 9);
+        p.add(painelAcoes, 1, 13);
 
         TableColumn<Compra, String> colId = new TableColumn<>("Nº");
         colId.setCellValueFactory(
@@ -198,10 +256,9 @@ public class CompraView {
                 item -> new ReadOnlyStringWrapper(
                         item.getValue().getFornecedor() == null ? "" : item.getValue().getFornecedor().getNome()));
 
-        TableColumn<Compra, String> colProduto = new TableColumn<>("Produto");
-        colProduto.setCellValueFactory(
-                item -> new ReadOnlyStringWrapper(
-                        item.getValue().getProduto() == null ? "" : item.getValue().getProduto().getNome()));
+        TableColumn<Compra, String> colItens = new TableColumn<>("Itens");
+        colItens.setCellValueFactory(
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getItens().size())));
 
         TableColumn<Compra, Void> colAcoes = new TableColumn<>("Ações");
         Callback<TableColumn<Compra, Void>, TableCell<Compra, Void>> callBack = new Callback<>() {
@@ -248,7 +305,7 @@ public class CompraView {
         colAcoes.setCellFactory(callBack);
 
         table.getColumns().addAll(colId, colStatus, colDataCompra, colPrevisaoEntrega, colVolumeTotal, colValorFrete,
-                colValorTotal, colFornecedor, colProduto, colAcoes);
+                colValorTotal, colFornecedor, colItens, colAcoes);
         table.setItems(control.getLista());
 
         table.getSelectionModel()

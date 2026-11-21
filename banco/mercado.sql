@@ -55,6 +55,16 @@ CREATE TABLE IF NOT EXISTS pedidos (
     FOREIGN KEY (id_caixa) REFERENCES caixas(id)
 );
 
+CREATE TABLE IF NOT EXISTS itens_pedido (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_pedido BIGINT NOT NULL,
+    id_produto BIGINT NOT NULL,
+    quantidade INT NOT NULL,
+    valor_unitario DECIMAL(10,2),
+    FOREIGN KEY (id_pedido) REFERENCES pedidos(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_produto) REFERENCES produtos(id)
+);
+
 CREATE TABLE IF NOT EXISTS compras (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     status VARCHAR(100),
@@ -64,8 +74,16 @@ CREATE TABLE IF NOT EXISTS compras (
     valor_frete DECIMAL(10,2),
     valor_total DECIMAL(10,2),
     id_fornecedor BIGINT NOT NULL,
+    FOREIGN KEY (id_fornecedor) REFERENCES fornecedores(id)
+);
+
+CREATE TABLE IF NOT EXISTS itens_compra (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_compra BIGINT NOT NULL,
     id_produto BIGINT NOT NULL,
-    FOREIGN KEY (id_fornecedor) REFERENCES fornecedores(id),
+    quantidade INT NOT NULL,
+    valor_unitario DECIMAL(10,2),
+    FOREIGN KEY (id_compra) REFERENCES compras(id) ON DELETE CASCADE,
     FOREIGN KEY (id_produto) REFERENCES produtos(id)
 );
 
