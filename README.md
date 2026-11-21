@@ -123,18 +123,6 @@ git clone https://github.com/Sadzin1603/TrabalhoPOO.git
 cd TrabalhoPOO
 ```
 
-## Como rodar
-
-No Windows use `gradlew.bat`; no Linux/Mac use `./gradlew`.
-
-| Ação | Windows | Linux / Mac |
-|---|---|---|
-| Executar o programa | `gradlew.bat run` | `./gradlew run` |
-| Rodar os testes | `gradlew.bat test` | `./gradlew test` |
-| Compilar tudo | `gradlew.bat build` | `./gradlew build` |
-
-> No Linux/Mac, se aparecer `permission denied`, rode `chmod +x gradlew` uma vez.
-
 ## Estrutura
 
 ```
