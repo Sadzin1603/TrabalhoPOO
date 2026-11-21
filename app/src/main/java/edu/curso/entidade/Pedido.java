@@ -9,7 +9,7 @@ public class Pedido {
     private LocalDate dataPedido;
     private double valorTotal;
     private Cliente cliente;
-    private Caixa caixa;//aqui tem que ser a ENTIDADE DO CAIXA
+    private Caixa caixa;
 
     public long getId() {
         return this.id;

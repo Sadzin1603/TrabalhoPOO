@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS compras (
     valor_frete DECIMAL(10,2),
     valor_total DECIMAL(10,2),
     id_fornecedor BIGINT NOT NULL,
-    FOREIGN KEY (id_fornecedor) REFERENCES fornecedores(id)
+    id_produto BIGINT NOT NULL,
+    FOREIGN KEY (id_fornecedor) REFERENCES fornecedores(id),
+    FOREIGN KEY (id_produto) REFERENCES produtos(id)
 );
 

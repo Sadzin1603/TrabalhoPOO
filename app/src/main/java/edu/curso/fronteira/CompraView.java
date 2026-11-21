@@ -3,6 +3,9 @@ package edu.curso.fronteira;
 import edu.curso.controle.CompraControl;
 import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Compra;
+import edu.curso.entidade.Fornecedor;
+import edu.curso.entidade.Produto;
+import edu.curso.persistencia.PersistenciaException;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.geometry.Insets;
@@ -10,6 +13,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -20,6 +24,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 
 public class CompraView {
 
@@ -37,23 +42,34 @@ public class CompraView {
         p.setVgap(6);
         p.setPadding(new Insets(10));
 
-        TextField txtStatus = new TextField();
+        TextField txtNumeroCompra = new TextField();
+        txtNumeroCompra.setPromptText("Somente para pesquisa");
+        Label lblErroNumeroCompra = new Label();
+        lblErroNumeroCompra.setTextFill(Color.RED);
+        lblErroNumeroCompra.textProperty().bind(control.erroNumeroCompraProperty());
+        p.add(new Label("Nº da Compra: "), 0, 0);
+        p.add(txtNumeroCompra, 1, 0);
+        p.add(lblErroNumeroCompra, 2, 0);
+        Bindings.bindBidirectional(control.numeroCompraProperty(), txtNumeroCompra.textProperty());
+
+        ComboBox<String> cmbStatus = new ComboBox<>();
+        cmbStatus.getItems().addAll("Aguardando pagamento", "Compra cancelado", "Pagamento efetuado", "Envio em andamento", "Chegou");
         Label lblErroStatus = new Label();
         lblErroStatus.setTextFill(Color.RED);
         lblErroStatus.textProperty().bind(control.erroStatusProperty());
-        p.add(new Label("Status: "), 0, 0);
-        p.add(txtStatus, 1, 0);
-        p.add(lblErroStatus, 2, 0);
-        Bindings.bindBidirectional(control.statusProperty(), txtStatus.textProperty());
+        p.add(new Label("Status: "), 0, 1);
+        p.add(cmbStatus, 1, 1);
+        p.add(lblErroStatus, 2, 1);
+        cmbStatus.valueProperty().bindBidirectional(control.statusProperty());
 
         TextField txtDataCompra = new TextField();
         txtDataCompra.setPromptText("dd/MM/aaaa");
         Label lblErroDataCompra = new Label();
         lblErroDataCompra.setTextFill(Color.RED);
         lblErroDataCompra.textProperty().bind(control.erroDataCompraProperty());
-        p.add(new Label("Data da Compra: "), 0, 1);
-        p.add(txtDataCompra, 1, 1);
-        p.add(lblErroDataCompra, 2, 1);
+        p.add(new Label("Data da Compra: "), 0, 2);
+        p.add(txtDataCompra, 1, 2);
+        p.add(lblErroDataCompra, 2, 2);
         Bindings.bindBidirectional(control.dataCompraProperty(), txtDataCompra.textProperty());
 
         TextField txtPrevisaoEntrega = new TextField();
@@ -61,61 +77,78 @@ public class CompraView {
         Label lblErroPrevisaoEntrega = new Label();
         lblErroPrevisaoEntrega.setTextFill(Color.RED);
         lblErroPrevisaoEntrega.textProperty().bind(control.erroPrevisaoEntregaProperty());
-        p.add(new Label("Previsão de Entrega: "), 0, 2);
-        p.add(txtPrevisaoEntrega, 1, 2);
-        p.add(lblErroPrevisaoEntrega, 2, 2);
+        p.add(new Label("Previsão de Entrega: "), 0, 3);
+        p.add(txtPrevisaoEntrega, 1, 3);
+        p.add(lblErroPrevisaoEntrega, 2, 3);
         Bindings.bindBidirectional(control.previsaoEntregaProperty(), txtPrevisaoEntrega.textProperty());
 
         TextField txtVolumeTotal = new TextField();
         Label lblErroVolumeTotal = new Label();
         lblErroVolumeTotal.setTextFill(Color.RED);
         lblErroVolumeTotal.textProperty().bind(control.erroVolumeTotalProperty());
-        p.add(new Label("Volume Total: "), 0, 3);
-        p.add(txtVolumeTotal, 1, 3);
-        p.add(lblErroVolumeTotal, 2, 3);
+        p.add(new Label("Volume Total: "), 0, 4);
+        p.add(txtVolumeTotal, 1, 4);
+        p.add(lblErroVolumeTotal, 2, 4);
         Bindings.bindBidirectional(control.volumeTotalProperty(), txtVolumeTotal.textProperty());
 
         TextField txtValorFrete = new TextField();
         Label lblErroValorFrete = new Label();
         lblErroValorFrete.setTextFill(Color.RED);
         lblErroValorFrete.textProperty().bind(control.erroValorFreteProperty());
-        p.add(new Label("Valor do Frete: "), 0, 4);
-        p.add(txtValorFrete, 1, 4);
-        p.add(lblErroValorFrete, 2, 4);
+        p.add(new Label("Valor do Frete: "), 0, 5);
+        p.add(txtValorFrete, 1, 5);
+        p.add(lblErroValorFrete, 2, 5);
         Bindings.bindBidirectional(control.valorFreteProperty(), txtValorFrete.textProperty());
 
         TextField txtValorTotal = new TextField();
         Label lblErroValorTotal = new Label();
         lblErroValorTotal.setTextFill(Color.RED);
         lblErroValorTotal.textProperty().bind(control.erroValorTotalProperty());
-        p.add(new Label("Valor Total: "), 0, 5);
-        p.add(txtValorTotal, 1, 5);
-        p.add(lblErroValorTotal, 2, 5);
+        p.add(new Label("Valor Total: "), 0, 6);
+        p.add(txtValorTotal, 1, 6);
+        p.add(lblErroValorTotal, 2, 6);
         Bindings.bindBidirectional(control.valorTotalProperty(), txtValorTotal.textProperty());
 
-        TextField txtIdFornecedor = new TextField();
-        Label lblErroIdFornecedor = new Label();
-        lblErroIdFornecedor.setTextFill(Color.RED);
-        lblErroIdFornecedor.textProperty().bind(control.erroIdFornecedorProperty());
-        p.add(new Label("Id do Fornecedor: "), 0, 6);
-        p.add(txtIdFornecedor, 1, 6);
-        p.add(lblErroIdFornecedor, 2, 6);
-        Bindings.bindBidirectional(control.idFornecedorProperty(), txtIdFornecedor.textProperty());
+        ComboBox<Fornecedor> cmbFornecedor = new ComboBox<>(control.getListaFornecedores());
+        cmbFornecedor.setPromptText("Selecione...");
+        cmbFornecedor.setOnShowing(e -> control.recarregarListaFornecedor());
+        cmbFornecedor.setConverter(new StringConverter<>() {
+            @Override public String toString(Fornecedor f) { return f == null ? "" : f.getNome(); }
+            @Override public Fornecedor fromString(String s) { return null; }
+        });
+        Label lblErroFornecedor = new Label();
+        lblErroFornecedor.setTextFill(Color.RED);
+        lblErroFornecedor.textProperty().bind(control.erroFornecedorProperty());
+        p.add(new Label("Fornecedor: "), 0, 7);
+        p.add(cmbFornecedor, 1, 7);
+        p.add(lblErroFornecedor, 2, 7);
+        cmbFornecedor.valueProperty().bindBidirectional(control.fornecedorProperty());
 
-        TextField txtIdProduto = new TextField();
-        Label lblErroIdProduto = new Label();
-        lblErroIdProduto.setTextFill(Color.RED);
-        lblErroIdProduto.textProperty().bind(control.erroIdProdutoProperty());
-        p.add(new Label("Id do Produto: "), 0, 7);
-        p.add(txtIdProduto, 1, 7);
-        p.add(lblErroIdProduto, 2, 7);
-        Bindings.bindBidirectional(control.idProdutoProperty(), txtIdProduto.textProperty());
+        ComboBox<Produto> cmbProduto = new ComboBox<>(control.getListaProdutos());
+        cmbProduto.setPromptText("Selecione...");
+        cmbProduto.setOnShowing(e -> control.recarregarListaProduto());
+        cmbProduto.setConverter(new StringConverter<>() {
+            @Override public String toString(Produto pr) { return pr == null ? "" : pr.getNome(); }
+            @Override public Produto fromString(String s) { return null; }
+        });
+        Label lblErroProduto = new Label();
+        lblErroProduto.setTextFill(Color.RED);
+        lblErroProduto.textProperty().bind(control.erroProdutoProperty());
+        p.add(new Label("Produto: "), 0, 8);
+        p.add(cmbProduto, 1, 8);
+        p.add(lblErroProduto, 2, 8);
+        cmbProduto.valueProperty().bindBidirectional(control.produtoProperty());
 
         Button btnSalvar = new Button("Salvar");
         Button btnLimpar = new Button("Limpar");
         Button btnPesquisar = new Button("Pesquisar");
         HBox painelAcoes = new HBox(10, btnSalvar, btnLimpar, btnPesquisar);
-        p.add(painelAcoes, 1, 7);
+        p.add(painelAcoes, 1, 9);
+
+        TableColumn<Compra, String> colId = new TableColumn<>("Nº");
+        colId.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getId()))
+        );
 
         TableColumn<Compra, String> colStatus = new TableColumn<>("Status");
         colStatus.setCellValueFactory(
@@ -202,7 +235,7 @@ public class CompraView {
             };
         colAcoes.setCellFactory(callBack);
 
-        table.getColumns().addAll(colStatus, colDataCompra, colPrevisaoEntrega, colVolumeTotal, colValorFrete, colValorTotal, colIdFornecedor, colAcoes);
+        table.getColumns().addAll(colId, colStatus, colDataCompra, colPrevisaoEntrega, colVolumeTotal, colValorFrete, colValorTotal, colFornecedor, colProduto, colAcoes);
         table.setItems(control.getLista());
 
         table.getSelectionModel()
@@ -213,7 +246,7 @@ public class CompraView {
             try {
                 if (control.salvar()) {
                     new Alert(AlertType.INFORMATION,
-                        "Compra salvo com sucesso", ButtonType.OK).showAndWait();
+                        "Compra salva com sucesso", ButtonType.OK).showAndWait();
                 } else {
                     new Alert(AlertType.WARNING,
                         "Corrija os campos indicados em vermelho", ButtonType.OK).showAndWait();

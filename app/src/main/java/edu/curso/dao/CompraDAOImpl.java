@@ -9,6 +9,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import edu.curso.entidade.Compra;
+import edu.curso.entidade.Fornecedor;
+import edu.curso.entidade.Produto;
 
 public class CompraDAOImpl implements CompraDAO {
 
@@ -19,7 +21,8 @@ public class CompraDAOImpl implements CompraDAO {
         stmt.setInt(4, e.getVolumeTotal());
         stmt.setDouble(5, e.getValorFrete());
         stmt.setDouble(6, e.getValorTotal());
-        stmt.setLong(7, e.getIdFornecedor());
+        stmt.setLong(7, e.getFornecedor().getId());
+        stmt.setLong(8, e.getProduto().getId());
     }
 
     private Compra mapear(ResultSet rs) throws SQLException {
@@ -31,13 +34,23 @@ public class CompraDAOImpl implements CompraDAO {
         e.setVolumeTotal(rs.getInt("volume_total"));
         e.setValorFrete(rs.getDouble("valor_frete"));
         e.setValorTotal(rs.getDouble("valor_total"));
-        e.setIdFornecedor(rs.getLong("id_fornecedor"));
+
+        Fornecedor fornecedor = new Fornecedor();
+        fornecedor.setId(rs.getLong("id_fornecedor"));
+        fornecedor.setNome(rs.getString("nome_fornecedor"));
+        e.setFornecedor(fornecedor);
+
+        Produto produto = new Produto();
+        produto.setId(rs.getLong("id_produto"));
+        produto.setNome(rs.getString("nome_produto"));
+        e.setProduto(produto);
+
         return e;
     }
 
     @Override
     public Compra salvar(Compra e) {
-        String sql = "INSERT INTO compras (status, data_compra, previsao_entrega, volume_total, valor_frete, valor_total, id_fornecedor) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO compras (status, data_compra, previsao_entrega, volume_total, valor_frete, valor_total, id_fornecedor, id_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = ConexaoFactory.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             preencher(stmt, e);
@@ -56,7 +69,12 @@ public class CompraDAOImpl implements CompraDAO {
     @Override
     public List<Compra> pesquisarTodos() {
         List<Compra> lista = new ArrayList<>();
-        String sql = "SELECT id, status, data_compra, previsao_entrega, volume_total, valor_frete, valor_total, id_fornecedor FROM compras ORDER BY id";
+        String sql = "SELECT c.id, c.status, c.data_compra, c.previsao_entrega, c.volume_total, c.valor_frete, c.valor_total, "
+                   + "c.id_fornecedor, f.nome AS nome_fornecedor, c.id_produto, pr.nome AS nome_produto "
+                   + "FROM compras c "
+                   + "JOIN fornecedores f ON f.id = c.id_fornecedor "
+                   + "JOIN produtos pr ON pr.id = c.id_produto "
+                   + "ORDER BY c.id";
         try (Connection con = ConexaoFactory.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -83,11 +101,11 @@ public class CompraDAOImpl implements CompraDAO {
 
     @Override
     public void atualizar(long id, Compra e) {
-        String sql = "UPDATE compras SET status=?, data_compra=?, previsao_entrega=?, volume_total=?, valor_frete=?, valor_total=?, id_fornecedor=? WHERE id=?";
+        String sql = "UPDATE compras SET status=?, data_compra=?, previsao_entrega=?, volume_total=?, valor_frete=?, valor_total=?, id_fornecedor=?, id_produto=? WHERE id=?";
         try (Connection con = ConexaoFactory.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
             preencher(stmt, e);
-            stmt.setLong(8, id);
+            stmt.setLong(9, id);
             stmt.executeUpdate();
         } catch (SQLException ex) {
             throw new PersistenciaException("Erro ao atualizar compra no banco de dados: " + ex.getMessage(), ex);

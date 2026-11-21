@@ -68,6 +68,7 @@ public class Compra {
     public void setFornecedor(Fornecedor valor) {
         this.fornecedor = valor;
     }
+
     public Produto getProduto() {
         return this.produto;
     }

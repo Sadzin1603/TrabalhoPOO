@@ -1,11 +1,16 @@
 package edu.curso.controle;
 
 import edu.curso.dao.PedidoDAO;
-import edu.curso.dao.PedidoDAOImpl;
+import edu.curso.dao.ClienteDAOImpl;
+import edu.curso.dao.CaixaDAOImpl;
 import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Pedido;
+import edu.curso.entidade.Cliente;
+import edu.curso.entidade.Caixa;
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -14,6 +19,8 @@ import javafx.collections.ObservableList;
 public class PedidoControl {
     private ObservableList<Pedido> lista = FXCollections.observableArrayList();
     private LongProperty id = new SimpleLongProperty(0);
+    private StringProperty numeroPedido = new SimpleStringProperty("");
+    private StringProperty erroNumeroPedido = new SimpleStringProperty("");
     private StringProperty status = new SimpleStringProperty("");
     private StringProperty erroStatus = new SimpleStringProperty("");
     private StringProperty formaPagamento = new SimpleStringProperty("");
@@ -22,15 +29,21 @@ public class PedidoControl {
     private StringProperty erroDataPedido = new SimpleStringProperty("");
     private StringProperty valorTotal = new SimpleStringProperty("");
     private StringProperty erroValorTotal = new SimpleStringProperty("");
-    private StringProperty idCliente = new SimpleStringProperty("");
-    private StringProperty erroIdCliente = new SimpleStringProperty("");
-    private StringProperty idCaixa = new SimpleStringProperty("");
-    private StringProperty erroIdCaixa = new SimpleStringProperty("");
+    private ObjectProperty<Cliente> cliente = new SimpleObjectProperty<>();
+    private StringProperty erroCliente = new SimpleStringProperty("");
+    private ObjectProperty<Caixa> caixa = new SimpleObjectProperty<>();
+    private StringProperty erroCaixa = new SimpleStringProperty("");
+    private ObservableList<Cliente> listaClientes = FXCollections.observableArrayList();
+    private ObservableList<Caixa> listaCaixas = FXCollections.observableArrayList();
+    private ClienteDAO clienteDAO = new ClienteDAOImpl();
+    private CaixaDAO caixaDAO = new CaixaDAOImpl();
     private PedidoDAO dao = new PedidoDAOImpl();
 
     public PedidoControl() {
         try {
             pesquisarTodos();
+            listaClientes.addAll(clienteDAO.pesquisarTodos());
+            listaCaixas.addAll(caixaDAO.pesquisarTodos());
         } catch (PersistenciaException ex) {
             System.out.println(ex.getMessage());
         }
@@ -38,12 +51,13 @@ public class PedidoControl {
 
     public void popularPedido(Pedido e) {
         if (e != null) {
+            numeroPedido.set(String.valueOf(e.getId()));
             status.set(e.getStatus());
             formaPagamento.set(e.getFormaPagamento());
             dataPedido.set(Validador.formatarData(e.getDataPedido()));
             valorTotal.set(String.valueOf(e.getValorTotal()));
-            idCliente.set(String.valueOf(e.getIdCliente()));
-            idCaixa.set(String.valueOf(e.getIdCaixa()));
+            cliente.set(e.getCliente());
+            caixa.set(e.getCaixa());
         }
     }
 
@@ -52,15 +66,16 @@ public class PedidoControl {
         lista.addAll(dao.pesquisarTodos());
     }
 
-    // Valida cada campo individualmente: cada um recebe a sua mensagem de erro
     public boolean validar() {
         erroStatus.set(Validador.texto(status.get()));
         erroFormaPagamento.set(Validador.texto(formaPagamento.get()));
         erroDataPedido.set(Validador.data(dataPedido.get()));
         erroValorTotal.set(Validador.decimal(valorTotal.get()));
-        erroIdCliente.set(Validador.fk(idCliente.get()));
-        erroIdCaixa.set(Validador.fk(idCaixa.get()));
-        return erroStatus.get().isEmpty() && erroFormaPagamento.get().isEmpty() && erroDataPedido.get().isEmpty() && erroValorTotal.get().isEmpty() && erroIdCliente.get().isEmpty() && erroIdCaixa.get().isEmpty();
+        erroCliente.set(cliente.get() == null ? "Selecione um cliente" : "");
+        erroCaixa.set(caixa.get() == null ? "Selecione um caixa" : "");
+        return erroStatus.get().isEmpty() && erroFormaPagamento.get().isEmpty()
+            && erroDataPedido.get().isEmpty() && erroValorTotal.get().isEmpty()
+            && erroCliente.get().isEmpty() && erroCaixa.get().isEmpty();
     }
 
     public boolean salvar() {
@@ -72,8 +87,8 @@ public class PedidoControl {
         e.setFormaPagamento(formaPagamento.get().trim());
         e.setDataPedido(Validador.parseData(dataPedido.get()));
         e.setValorTotal(Validador.parseDecimal(valorTotal.get()));
-        e.setIdCliente(Long.parseLong(idCliente.get().trim()));
-        e.setIdCaixa(Long.parseLong(idCaixa.get().trim()));
+        e.setCliente(cliente.get());
+        e.setCaixa(caixa.get());
         if (id.get() == 0) {
             dao.salvar(e);
         } else {
@@ -86,6 +101,8 @@ public class PedidoControl {
 
     public void limparCampos() {
         id.set(0);
+        numeroPedido.set("");
+        erroNumeroPedido.set("");
         status.set("");
         erroStatus.set("");
         formaPagamento.set("");
@@ -94,10 +111,10 @@ public class PedidoControl {
         erroDataPedido.set("");
         valorTotal.set("");
         erroValorTotal.set("");
-        idCliente.set("");
-        erroIdCliente.set("");
-        idCaixa.set("");
-        erroIdCaixa.set("");
+        cliente.set(null);
+        erroCliente.set("");
+        caixa.set(null);
+        erroCaixa.set("");
     }
 
     public void excluir(Pedido e) {
@@ -113,17 +130,57 @@ public class PedidoControl {
         popularPedido(e);
     }
 
-    // Filtra a tabela pelo campo "status" digitado no formulário
     public void pesquisar() {
-        String termo = status.get().trim().toLowerCase();
+        String termo = numeroPedido.get().trim();
+        erroNumeroPedido.set("");
         pesquisarTodos();
-        if (!termo.isEmpty()) {
-            lista.removeIf(e -> e == null || !String.valueOf(e.getStatus()).toLowerCase().contains(termo));
+        if (termo.isEmpty()) {
+            return;
+        }
+        try {
+            long idBuscado = Long.parseLong(termo);
+            lista.removeIf(e -> e == null || e.getId() != idBuscado);
+        } catch (NumberFormatException ex) {
+            erroNumeroPedido.set("Digite um número de pedido válido");
+        }
+    }
+
+    public void recarregarListaCliente() {
+        Cliente atual = cliente.get();
+        listaClientes.setAll(clienteDAO.pesquisarTodos());
+        if (atual != null) {
+            for (Cliente c : listaClientes) {
+                if (c.getId() == atual.getId()) {
+                    cliente.set(c);
+                    break;
+                }
+            }
+        }
+    }
+
+    public void recarregarListaCaixa() {
+        Caixa atual = caixa.get();
+        listaCaixas.setAll(caixaDAO.pesquisarTodos());
+        if (atual != null) {
+            for (Caixa c : listaCaixas) {
+                if (c.getId() == atual.getId()) {
+                    caixa.set(c);
+                    break;
+                }
+            }
         }
     }
 
     public LongProperty idProperty() {
         return id;
+    }
+
+    public StringProperty numeroPedidoProperty() {
+        return numeroPedido;
+    }
+
+    public StringProperty erroNumeroPedidoProperty() {
+        return erroNumeroPedido;
     }
 
     public StringProperty statusProperty() {
@@ -158,20 +215,28 @@ public class PedidoControl {
         return erroValorTotal;
     }
 
-    public StringProperty idClienteProperty() {
-        return idCliente;
+    public ObjectProperty<Cliente> clienteProperty() {
+        return cliente;
     }
 
-    public StringProperty erroIdClienteProperty() {
-        return erroIdCliente;
+    public StringProperty erroClienteProperty() {
+        return erroCliente;
     }
 
-    public StringProperty idCaixaProperty() {
-        return idCaixa;
+    public ObjectProperty<Caixa> caixaProperty() {
+        return caixa;
     }
 
-    public StringProperty erroIdCaixaProperty() {
-        return erroIdCaixa;
+    public StringProperty erroCaixaProperty() {
+        return erroCaixa;
+    }
+
+    public ObservableList<Cliente> getListaClientes() {
+        return listaClientes;
+    }
+
+    public ObservableList<Caixa> getListaCaixas() {
+        return listaCaixas;
     }
 
     public ObservableList<Pedido> getLista() {
