@@ -1,8 +1,8 @@
 package edu.curso.fronteira;
 
 import edu.curso.controle.PedidoControl;
+import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Pedido;
-import edu.curso.persistencia.PersistenciaException;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.geometry.Insets;
@@ -120,12 +120,12 @@ public class PedidoView {
 
         TableColumn<Pedido, String> colIdCliente = new TableColumn<>("Id do Cliente");
         colIdCliente.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getIdCliente()))
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getCliente().getId()))
         );
 
         TableColumn<Pedido, String> colIdCaixa = new TableColumn<>("Id do Caixa");
         colIdCaixa.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getIdCaixa()))
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getCaixa().getId()))
         );
 
         TableColumn<Pedido, Void> colAcoes = new TableColumn<>("Ações");

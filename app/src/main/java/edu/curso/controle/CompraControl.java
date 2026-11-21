@@ -1,9 +1,10 @@
 package edu.curso.controle;
 
+import edu.curso.dao.CompraDAO;
+import edu.curso.dao.CompraDAOImpl;
+import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Compra;
-import edu.curso.persistencia.CompraDAO;
-import edu.curso.persistencia.CompraDAOImpl;
-import edu.curso.persistencia.PersistenciaException;
+import edu.curso.entidade.Fornecedor;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -46,7 +47,7 @@ public class CompraControl {
             volumeTotal.set(String.valueOf(e.getVolumeTotal()));
             valorFrete.set(String.valueOf(e.getValorFrete()));
             valorTotal.set(String.valueOf(e.getValorTotal()));
-            idFornecedor.set(String.valueOf(e.getIdFornecedor()));
+            idFornecedor.set(String.valueOf(e.getFornecedor().getId()));
         }
     }
 
@@ -78,7 +79,7 @@ public class CompraControl {
         e.setVolumeTotal(Integer.parseInt(volumeTotal.get().trim()));
         e.setValorFrete(Validador.parseDecimal(valorFrete.get()));
         e.setValorTotal(Validador.parseDecimal(valorTotal.get()));
-        e.setIdFornecedor(Long.parseLong(idFornecedor.get().trim()));
+        e.setFornecedor(new Fornecedor());
         if (id.get() == 0) {
             dao.salvar(e);
         } else {

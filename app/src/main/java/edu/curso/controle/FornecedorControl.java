@@ -1,9 +1,9 @@
 package edu.curso.controle;
 
+import edu.curso.dao.FornecedorDAO;
+import edu.curso.dao.FornecedorDAOImpl;
+import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Fornecedor;
-import edu.curso.persistencia.FornecedorDAO;
-import edu.curso.persistencia.FornecedorDAOImpl;
-import edu.curso.persistencia.PersistenciaException;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;

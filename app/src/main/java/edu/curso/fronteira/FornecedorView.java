@@ -1,8 +1,8 @@
 package edu.curso.fronteira;
 
 import edu.curso.controle.FornecedorControl;
+import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Fornecedor;
-import edu.curso.persistencia.PersistenciaException;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.geometry.Insets;

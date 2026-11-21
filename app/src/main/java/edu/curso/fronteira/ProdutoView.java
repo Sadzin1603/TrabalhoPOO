@@ -1,8 +1,8 @@
 package edu.curso.fronteira;
 
 import edu.curso.controle.ProdutoControl;
+import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Produto;
-import edu.curso.persistencia.PersistenciaException;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.geometry.Insets;

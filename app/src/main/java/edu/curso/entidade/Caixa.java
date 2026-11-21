@@ -1,14 +1,7 @@
 package edu.curso.entidade;
 
-import java.time.LocalDate;
-
-public class Caixa {
+public class Caixa extends PessoaFisica {
     private long id;
-    private String nome;
-    private String cpf;
-    private String telefone;
-    private String email;
-    private LocalDate dataNascimento;
     private double salario;
     private String turno;
 
@@ -17,41 +10,6 @@ public class Caixa {
     }
     public void setId(long valor) {
         this.id = valor;
-    }
-
-    public String getNome() {
-        return this.nome;
-    }
-    public void setNome(String valor) {
-        this.nome = valor;
-    }
-
-    public String getCpf() {
-        return this.cpf;
-    }
-    public void setCpf(String valor) {
-        this.cpf = valor;
-    }
-
-    public String getTelefone() {
-        return this.telefone;
-    }
-    public void setTelefone(String valor) {
-        this.telefone = valor;
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
-    public void setEmail(String valor) {
-        this.email = valor;
-    }
-
-    public LocalDate getDataNascimento() {
-        return this.dataNascimento;
-    }
-    public void setDataNascimento(LocalDate valor) {
-        this.dataNascimento = valor;
     }
 
     public double getSalario() {
@@ -70,6 +28,6 @@ public class Caixa {
 
     @Override
     public String toString() {
-        return "Caixa[" + id + ", " + nome + ", " + cpf + ", " + telefone + ", " + email + ", " + dataNascimento + ", " + salario + ", " + turno + "]";
+        return "Caixa[" + id + ", " + getNome() + ", " + getCpf() + ", " + getTelefone() + ", " + getEmail() + ", " + getDataNascimento() + ", " + salario + ", " + turno + "]";
     }
 }

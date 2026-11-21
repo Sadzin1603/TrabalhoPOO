@@ -1,9 +1,9 @@
 package edu.curso.controle;
 
+import edu.curso.dao.ClienteDAO;
+import edu.curso.dao.ClienteDAOImpl;
+import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Cliente;
-import edu.curso.persistencia.ClienteDAO;
-import edu.curso.persistencia.ClienteDAOImpl;
-import edu.curso.persistencia.PersistenciaException;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -46,7 +46,7 @@ public class ClienteControl {
             endereco.set(e.getEndereco());
         }
     }
-
+    
     public void pesquisarTodos() {
         lista.clear();
         lista.addAll(dao.pesquisarTodos());

@@ -1,4 +1,4 @@
-package edu.curso.persistencia;
+package edu.curso.dao;
 
 import java.util.List;
 import edu.curso.entidade.Produto;

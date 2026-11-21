@@ -1,4 +1,4 @@
-package edu.curso.persistencia;
+package edu.curso.dao;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -17,8 +17,8 @@ public class PedidoDAOImpl implements PedidoDAO {
         stmt.setString(2, e.getFormaPagamento());
         stmt.setDate(3, e.getDataPedido() == null ? null : Date.valueOf(e.getDataPedido()));
         stmt.setDouble(4, e.getValorTotal());
-        stmt.setLong(5, e.getIdCliente());
-        stmt.setLong(6, e.getIdCaixa());
+        stmt.setLong(5, e.getCliente().getId());
+        stmt.setLong(6, e.getCaixa().getId());
     }
 
     private Pedido mapear(ResultSet rs) throws SQLException {
@@ -28,8 +28,8 @@ public class PedidoDAOImpl implements PedidoDAO {
         e.setFormaPagamento(rs.getString("forma_pagamento"));
         e.setDataPedido(rs.getDate("data_pedido") == null ? null : rs.getDate("data_pedido").toLocalDate());
         e.setValorTotal(rs.getDouble("valor_total"));
-        e.setIdCliente(rs.getLong("id_cliente"));
-        e.setIdCaixa(rs.getLong("id_caixa"));
+        e.setCliente(ClienteDAOImpl.getInstance().pesquisarPorId(rs.getLong("id_cliente")));
+        e.setCaixa(CaixaDAOImpl.getInstance().pesquisarPorId(rs.getLong("id_caixa")));
         return e;
     }
 
