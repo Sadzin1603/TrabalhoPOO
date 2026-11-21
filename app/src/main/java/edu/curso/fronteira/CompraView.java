@@ -1,11 +1,16 @@
 package edu.curso.fronteira;
 
-import edu.curso.controle.CompraControl;
+import edu.curso.dao.PedidoDAO;
+import edu.curso.dao.PedidoDAOImpl;
+import edu.curso.dao.ClienteDAO;
+import edu.curso.dao.ClienteDAOImpl;
+import edu.curso.dao.CaixaDAO;
+import edu.curso.dao.CaixaDAOImpl;
 import edu.curso.dao.PersistenciaException;
+import edu.curso.controle.CompraControl;
 import edu.curso.entidade.Compra;
 import edu.curso.entidade.Fornecedor;
 import edu.curso.entidade.Produto;
-import edu.curso.persistencia.PersistenciaException;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.geometry.Insets;
@@ -53,7 +58,8 @@ public class CompraView {
         Bindings.bindBidirectional(control.numeroCompraProperty(), txtNumeroCompra.textProperty());
 
         ComboBox<String> cmbStatus = new ComboBox<>();
-        cmbStatus.getItems().addAll("Aguardando pagamento", "Compra cancelado", "Pagamento efetuado", "Envio em andamento", "Chegou");
+        cmbStatus.getItems().addAll("Aguardando pagamento", "Compra cancelado", "Pagamento efetuado",
+                "Envio em andamento", "Chegou");
         Label lblErroStatus = new Label();
         lblErroStatus.setTextFill(Color.RED);
         lblErroStatus.textProperty().bind(control.erroStatusProperty());
@@ -113,8 +119,15 @@ public class CompraView {
         cmbFornecedor.setPromptText("Selecione...");
         cmbFornecedor.setOnShowing(e -> control.recarregarListaFornecedor());
         cmbFornecedor.setConverter(new StringConverter<>() {
-            @Override public String toString(Fornecedor f) { return f == null ? "" : f.getNome(); }
-            @Override public Fornecedor fromString(String s) { return null; }
+            @Override
+            public String toString(Fornecedor f) {
+                return f == null ? "" : f.getNome();
+            }
+
+            @Override
+            public Fornecedor fromString(String s) {
+                return null;
+            }
         });
         Label lblErroFornecedor = new Label();
         lblErroFornecedor.setTextFill(Color.RED);
@@ -128,8 +141,15 @@ public class CompraView {
         cmbProduto.setPromptText("Selecione...");
         cmbProduto.setOnShowing(e -> control.recarregarListaProduto());
         cmbProduto.setConverter(new StringConverter<>() {
-            @Override public String toString(Produto pr) { return pr == null ? "" : pr.getNome(); }
-            @Override public Produto fromString(String s) { return null; }
+            @Override
+            public String toString(Produto pr) {
+                return pr == null ? "" : pr.getNome();
+            }
+
+            @Override
+            public Produto fromString(String s) {
+                return null;
+            }
         });
         Label lblErroProduto = new Label();
         lblErroProduto.setTextFill(Color.RED);
@@ -147,109 +167,102 @@ public class CompraView {
 
         TableColumn<Compra, String> colId = new TableColumn<>("Nº");
         colId.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getId()))
-        );
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getId())));
 
         TableColumn<Compra, String> colStatus = new TableColumn<>("Status");
         colStatus.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getStatus()))
-        );
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getStatus())));
 
         TableColumn<Compra, String> colDataCompra = new TableColumn<>("Data da Compra");
         colDataCompra.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getDataCompra()))
-        );
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getDataCompra())));
 
         TableColumn<Compra, String> colPrevisaoEntrega = new TableColumn<>("Previsão de Entrega");
         colPrevisaoEntrega.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getPrevisaoEntrega()))
-        );
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getPrevisaoEntrega())));
 
         TableColumn<Compra, String> colVolumeTotal = new TableColumn<>("Volume Total");
         colVolumeTotal.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getVolumeTotal()))
-        );
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getVolumeTotal())));
 
         TableColumn<Compra, String> colValorFrete = new TableColumn<>("Valor do Frete");
         colValorFrete.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getValorFrete()))
-        );
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getValorFrete())));
 
         TableColumn<Compra, String> colValorTotal = new TableColumn<>("Valor Total");
         colValorTotal.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getValorTotal()))
-        );
+                item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getValorTotal())));
 
-        TableColumn<Compra, String> colIdFornecedor = new TableColumn<>("Id do Fornecedor");
-        colIdFornecedor.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getIdFornecedor()))
-        );
+        TableColumn<Compra, String> colFornecedor = new TableColumn<>("Fornecedor");
+        colFornecedor.setCellValueFactory(
+                item -> new ReadOnlyStringWrapper(
+                        item.getValue().getFornecedor() == null ? "" : item.getValue().getFornecedor().getNome()));
 
-        TableColumn<Compra, String> colIdProduto = new TableColumn<>("Id do Produto");
-        colIdProduto.setCellValueFactory(
-            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getIdProduto()))
-        );
+        TableColumn<Compra, String> colProduto = new TableColumn<>("Produto");
+        colProduto.setCellValueFactory(
+                item -> new ReadOnlyStringWrapper(
+                        item.getValue().getProduto() == null ? "" : item.getValue().getProduto().getNome()));
 
         TableColumn<Compra, Void> colAcoes = new TableColumn<>("Ações");
-        Callback<TableColumn<Compra, Void>, TableCell<Compra, Void>> callBack =
-            new Callback<>() {
-                public TableCell<Compra, Void> call(TableColumn<Compra, Void> tc) {
-                    TableCell<Compra, Void> tableCell = new TableCell<>() {
+        Callback<TableColumn<Compra, Void>, TableCell<Compra, Void>> callBack = new Callback<>() {
+            public TableCell<Compra, Void> call(TableColumn<Compra, Void> tc) {
+                TableCell<Compra, Void> tableCell = new TableCell<>() {
 
-                        private final Button btnExcluir = new Button("Excluir");
-                        private final Button btnAtualizar = new Button("Atualizar");
-                        private final HBox painelBotoes = new HBox(5);
+                    private final Button btnExcluir = new Button("Excluir");
+                    private final Button btnAtualizar = new Button("Atualizar");
+                    private final HBox painelBotoes = new HBox(5);
 
-                        {
-                            painelBotoes.getChildren().addAll(btnAtualizar, btnExcluir);
-                            btnExcluir.setOnAction(ev -> {
-                                Compra item = getTableRow().getItem();
-                                if (item != null) {
-                                    try {
-                                        control.excluir(item);
-                                    } catch (PersistenciaException ex) {
-                                        mostrarErro(ex);
-                                    }
+                    {
+                        painelBotoes.getChildren().addAll(btnAtualizar, btnExcluir);
+                        btnExcluir.setOnAction(ev -> {
+                            Compra item = getTableRow().getItem();
+                            if (item != null) {
+                                try {
+                                    control.excluir(item);
+                                } catch (PersistenciaException ex) {
+                                    mostrarErro(ex);
                                 }
-                            });
-                            btnAtualizar.setOnAction(ev -> {
-                                Compra item = getTableRow().getItem();
-                                if (item != null) {
-                                    control.atualizar(item);
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void updateItem(Void valor, boolean empty) {
-                            super.updateItem(valor, empty);
-                            if (!empty) {
-                                setGraphic(painelBotoes);
-                            } else {
-                                setGraphic(null);
                             }
+                        });
+                        btnAtualizar.setOnAction(ev -> {
+                            Compra item = getTableRow().getItem();
+                            if (item != null) {
+                                control.atualizar(item);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void updateItem(Void valor, boolean empty) {
+                        super.updateItem(valor, empty);
+                        if (!empty) {
+                            setGraphic(painelBotoes);
+                        } else {
+                            setGraphic(null);
                         }
-                    };
-                    return tableCell;
-                }
-            };
+                    }
+                };
+                return tableCell;
+            }
+        };
         colAcoes.setCellFactory(callBack);
 
-        table.getColumns().addAll(colId, colStatus, colDataCompra, colPrevisaoEntrega, colVolumeTotal, colValorFrete, colValorTotal, colFornecedor, colProduto, colAcoes);
+        table.getColumns().addAll(colId, colStatus, colDataCompra, colPrevisaoEntrega, colVolumeTotal, colValorFrete,
+                colValorTotal, colFornecedor, colProduto, colAcoes);
         table.setItems(control.getLista());
 
         table.getSelectionModel()
-            .selectedItemProperty()
-            .addListener((obs, antigo, novo) -> control.popularCompra(novo));
+                .selectedItemProperty()
+                .addListener((obs, antigo, novo) -> control.popularCompra(novo));
 
         btnSalvar.setOnAction(e -> {
             try {
                 if (control.salvar()) {
                     new Alert(AlertType.INFORMATION,
-                        "Compra salva com sucesso", ButtonType.OK).showAndWait();
+                            "Compra salva com sucesso", ButtonType.OK).showAndWait();
                 } else {
                     new Alert(AlertType.WARNING,
-                        "Corrija os campos indicados em vermelho", ButtonType.OK).showAndWait();
+                            "Corrija os campos indicados em vermelho", ButtonType.OK).showAndWait();
                 }
             } catch (PersistenciaException ex) {
                 mostrarErro(ex);

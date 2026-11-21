@@ -2,9 +2,14 @@ package edu.curso.controle;
 
 import edu.curso.dao.CompraDAO;
 import edu.curso.dao.CompraDAOImpl;
+import edu.curso.dao.FornecedorDAO;
+import edu.curso.dao.FornecedorDAOImpl;
+import edu.curso.dao.ProdutoDAO;
+import edu.curso.dao.ProdutoDAOImpl;
 import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Compra;
 import edu.curso.entidade.Fornecedor;
+import edu.curso.entidade.Produto;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleLongProperty;

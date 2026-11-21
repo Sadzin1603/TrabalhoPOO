@@ -1,7 +1,10 @@
 package edu.curso.controle;
 
 import edu.curso.dao.PedidoDAO;
+import edu.curso.dao.PedidoDAOImpl;
+import edu.curso.dao.ClienteDAO;
 import edu.curso.dao.ClienteDAOImpl;
+import edu.curso.dao.CaixaDAO;
 import edu.curso.dao.CaixaDAOImpl;
 import edu.curso.dao.PersistenciaException;
 import edu.curso.entidade.Pedido;
