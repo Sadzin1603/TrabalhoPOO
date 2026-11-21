@@ -11,6 +11,7 @@ public class Compra {
     private double valorFrete;
     private double valorTotal;
     private Fornecedor fornecedor;
+    private Produto produto;
 
     public long getId() {
         return this.id;
@@ -67,9 +68,15 @@ public class Compra {
     public void setFornecedor(Fornecedor valor) {
         this.fornecedor = valor;
     }
+    public Produto getProduto() {
+        return this.produto;
+    }
+    public void setProduto(Produto valor) {
+        this.produto = valor;
+    }
 
     @Override
     public String toString() {
-        return "Compra[" + id + ", " + status + ", " + dataCompra + ", " + previsaoEntrega + ", " + volumeTotal + ", " + valorFrete + ", " + valorTotal + ", " + fornecedor + "]";
+        return "Compra[" + id + ", " + status + ", " + dataCompra + ", " + previsaoEntrega + ", " + volumeTotal + ", " + valorFrete + ", " + valorTotal + ", " + fornecedor + ", " + produto + "]";
     }
 }

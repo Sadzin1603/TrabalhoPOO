@@ -55,61 +55,54 @@ CRUD (criar, ler, atualizar e remover), permitindo:
 
 - id
 
-### Atendente de Caixa
+### Caixa
 
-- nome
-- tel
-- email
-- cpf
+- id
 - salario
-- data_nascimento
+- turno
 
 ### Produto
 
+- id
 - nome
-- val_unitario
-- qtd_estocado
+- valorUnitario
+- valorAtacado
+- qtdAtacado
 - marca
 - validade
 
 ### Fornecedor
 
+- id
 - nome
-- tel
+- razaoSocial
+- telefone
 - email
 - cnpj
 - endereco
 
 ### Pedido
 
-- id_cliente
-- id_caixa
-- forma_pag
-- data_pedido
-- valor_total
-
-### Pedido_Produto
-
-- id_produto
-- id_pedido
-- qtd
+- id
+- cliente
+- caixa
+- status
+- formaPagamento
+- dataPedido
+- valorTotal
 
 ### Compra
 
 - id
+- fornecedor
+- produto
 - status
-- data_compra
-- previsao_entrega
-- volume_total
-- valor_frete
-- valor_total
+- dataCompra
+- previsaoEntrega
+- volumeTotal
+- valorFrete
+- valorTotal
 
-### Compra_Produto
-
-- id_prod
-- id_fornecedor
-- qtd
-- volume
 
 
 Instruções para execução = 

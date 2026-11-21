@@ -102,6 +102,15 @@ public class CompraView {
         p.add(lblErroIdFornecedor, 2, 6);
         Bindings.bindBidirectional(control.idFornecedorProperty(), txtIdFornecedor.textProperty());
 
+        TextField txtIdProduto = new TextField();
+        Label lblErroIdProduto = new Label();
+        lblErroIdProduto.setTextFill(Color.RED);
+        lblErroIdProduto.textProperty().bind(control.erroIdProdutoProperty());
+        p.add(new Label("Id do Produto: "), 0, 7);
+        p.add(txtIdProduto, 1, 7);
+        p.add(lblErroIdProduto, 2, 7);
+        Bindings.bindBidirectional(control.idProdutoProperty(), txtIdProduto.textProperty());
+
         Button btnSalvar = new Button("Salvar");
         Button btnLimpar = new Button("Limpar");
         Button btnPesquisar = new Button("Pesquisar");
@@ -141,6 +150,11 @@ public class CompraView {
         TableColumn<Compra, String> colIdFornecedor = new TableColumn<>("Id do Fornecedor");
         colIdFornecedor.setCellValueFactory(
             item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getIdFornecedor()))
+        );
+
+        TableColumn<Compra, String> colIdProduto = new TableColumn<>("Id do Produto");
+        colIdProduto.setCellValueFactory(
+            item -> new ReadOnlyStringWrapper(String.valueOf(item.getValue().getIdProduto()))
         );
 
         TableColumn<Compra, Void> colAcoes = new TableColumn<>("Ações");
